@@ -11,7 +11,21 @@ var importanceAnalyzer = new TaskImportanceAnalyzer();
 analytics.Log("app_started");
 
 var todoService = new TodoService(storage, analytics, importanceAnalyzer);
-var searchService = new TaskSearchService();
+var searchService = new TaskSearchService(analytics);
+
+if (args.Length >= 2 && args[0] == "--stress-test" && int.TryParse(args[1], out var count))
+{
+    var stressTest = new StressTestService(todoService, searchService, analytics);
+    var result = stressTest.Run(count);
+
+    Console.WriteLine($"Создано задач: {result.GeneratedTasks}");
+    Console.WriteLine($"Время генерации: {result.GenerationMilliseconds:F3} мс");
+    Console.WriteLine($"Поиск Contains: {result.SearchBenchmark.ContainsElapsed.TotalMilliseconds:F3} мс");
+    Console.WriteLine($"Поиск Regex: {result.SearchBenchmark.RegexElapsed.TotalMilliseconds:F3} мс");
+    Console.WriteLine($"Фильтрация категории: {result.FilterMetrics.ElapsedMilliseconds:F3} мс");
+    return;
+}
+
 var menu = new ConsoleMenu(todoService, searchService, analytics);
 
 menu.Run();

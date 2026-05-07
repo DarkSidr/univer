@@ -29,6 +29,7 @@ public sealed class ConsoleMenu
             System.Console.WriteLine("6. Удалить задачу");
             System.Console.WriteLine("7. Найти задачу");
             System.Console.WriteLine("8. A/B тест поиска");
+            System.Console.WriteLine("9. Показать метрики");
             System.Console.WriteLine("0. Выход");
             System.Console.Write("Выберите пункт: ");
 
@@ -60,6 +61,9 @@ public sealed class ConsoleMenu
                     break;
                 case "8":
                     RunSearchBenchmark();
+                    break;
+                case "9":
+                    ShowMetrics();
                     break;
                 case "0":
                     return;
@@ -202,6 +206,28 @@ public sealed class ConsoleMenu
         System.Console.WriteLine($"A Contains: {result.ContainsElapsed.TotalMilliseconds:F3} мс");
         System.Console.WriteLine($"B Regex:    {result.RegexElapsed.TotalMilliseconds:F3} мс");
         System.Console.WriteLine($"Победитель: {DisplaySearchMode(result.Winner)}");
+    }
+
+    private void ShowMetrics()
+    {
+        var tasks = _todoService.GetTasks();
+        var activeTasks = tasks.Count(task => !task.IsCompleted);
+        var completedTasks = tasks.Count(task => task.IsCompleted);
+        var highImportanceTasks = tasks.Count(task => task.Importance == "Высокая");
+
+        System.Console.WriteLine("Метрики приложения:");
+        System.Console.WriteLine($"Всего задач: {tasks.Count}");
+        System.Console.WriteLine($"Активные задачи: {activeTasks}");
+        System.Console.WriteLine($"Выполненные задачи: {completedTasks}");
+        System.Console.WriteLine($"Высокая важность: {highImportanceTasks}");
+
+        _analytics.Log("metrics_viewed", new Dictionary<string, object?>
+        {
+            ["tasks_total"] = tasks.Count,
+            ["tasks_active"] = activeTasks,
+            ["tasks_completed"] = completedTasks,
+            ["high_importance"] = highImportanceTasks
+        });
     }
 
     private void PrintTask(TaskItem task)

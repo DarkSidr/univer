@@ -12,6 +12,8 @@
 - [Лабораторная работа №2: проектирование и управление требованиями](docs/Design.md)
 - [Лабораторная работа №3: план проверки гипотез](docs/HypothesisCheckPlan.md)
 - [Лабораторная работа №4: эксперименты и доработка](docs/ExperimentResults.md)
+- [Лабораторная работа №5: итоговый отчет](FinalReport.md)
+- [Юнит-экономика](docs/Economics.md)
 
 ## MVP
 
@@ -26,7 +28,9 @@
 - логирование событий в `analytics.log`;
 - поиск задач в режимах Version A `Contains` и Version B `Regex`;
 - A/B benchmark поиска;
-- автоматическая оценка важности задачи.
+- автоматическая оценка важности задачи;
+- структурированное логирование;
+- стресс-тест и метрики производительности.
 
 ## Запуск
 
@@ -38,6 +42,12 @@ dotnet run --project src/TodoList.Console/TodoList.Console.csproj
 
 ```bash
 dotnet build TodoListPrototype.sln
+```
+
+## Стресс-тест
+
+```bash
+dotnet run --project src/TodoList.Console/TodoList.Console.csproj -- --stress-test 1000
 ```
 
 ## Структура проекта
@@ -52,6 +62,7 @@ dotnet build TodoListPrototype.sln
 │   │   └── to-be.png
 │   ├── wireframes.md
 │   ├── ExperimentResults.md
+│   ├── Economics.md
 │   ├── HypothesisCheckPlan.md
 │   ├── Design.md
 │   └── Research.md
@@ -60,6 +71,7 @@ dotnet build TodoListPrototype.sln
 ├── .github/
 │   └── workflows/
 │       └── dotnet.yml
+├── FinalReport.md
 ├── TodoListPrototype.sln
 ├── .gitignore
 └── README.md
@@ -74,4 +86,5 @@ dotnet build TodoListPrototype.sln
 - для уточнения JTBD и гипотез будущего прототипа;
 - для генерации Acceptance Criteria, Use Case и backlog во второй лабораторной работе;
 - для генерации CRUD-логики, JSON-сериализации, валидации и аналитических событий в MVP;
-- для подготовки A/B benchmark, AI-классификации важности и рефакторинга в четвертой лабораторной работе.
+- для подготовки A/B benchmark, AI-классификации важности и рефакторинга в четвертой лабораторной работе;
+- для подготовки стресс-теста, расчета экономики и итогового отчета.

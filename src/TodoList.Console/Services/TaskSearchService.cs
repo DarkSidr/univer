@@ -6,18 +6,38 @@ namespace TodoListPrototype.Services;
 
 public sealed class TaskSearchService
 {
+    private readonly IAnalyticsLogger? _analytics;
+
+    public TaskSearchService(IAnalyticsLogger? analytics = null)
+    {
+        _analytics = analytics;
+    }
+
     public IReadOnlyList<TaskItem> Search(IEnumerable<TaskItem> tasks, string query, SearchMode mode)
     {
+        var stopwatch = Stopwatch.StartNew();
+
         if (string.IsNullOrWhiteSpace(query))
         {
             return [];
         }
 
-        return mode switch
+        var results = mode switch
         {
             SearchMode.Regex => SearchByRegex(tasks, query),
             _ => SearchByContains(tasks, query)
         };
+
+        stopwatch.Stop();
+        _analytics?.Log("operation_measured", new Dictionary<string, object?>
+        {
+            ["operation"] = "task_search",
+            ["mode"] = mode.ToString(),
+            ["items_count"] = results.Count,
+            ["elapsed_ms"] = stopwatch.Elapsed.TotalMilliseconds
+        });
+
+        return results;
     }
 
     public SearchBenchmarkResult Benchmark(IEnumerable<TaskItem> tasks, string query, int iterations = 1_000)

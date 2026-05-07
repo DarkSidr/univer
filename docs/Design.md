@@ -31,7 +31,11 @@ flowchart TD
     M --> N["Пользователь вычеркивает или удаляет запись"]
 ```
 
-Файл диаграммы: [diagrams/as-is.mmd](diagrams/as-is.mmd).
+Готовая диаграмма: [diagrams/as-is.png](diagrams/as-is.png).
+
+![AS-IS процесс управления задачами без приложения](diagrams/as-is.png)
+
+Исходник диаграммы в Mermaid: [diagrams/as-is.mmd](diagrams/as-is.mmd).
 
 ## TO-BE: будущий процесс с приложением
 
@@ -55,7 +59,11 @@ flowchart TD
     M --> N
 ```
 
-Файл диаграммы: [diagrams/to-be.mmd](diagrams/to-be.mmd).
+Готовая диаграмма: [diagrams/to-be.png](diagrams/to-be.png).
+
+![TO-BE процесс управления задачами в приложении Todo List](diagrams/to-be.png)
+
+Исходник диаграммы в Mermaid: [diagrams/to-be.mmd](diagrams/to-be.mmd).
 
 ## User Stories
 

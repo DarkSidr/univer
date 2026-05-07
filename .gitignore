@@ -1,6 +1,7 @@
 *.log
 .~lock.*
 *.docx
+*.zip
 
 # .NET
 bin/

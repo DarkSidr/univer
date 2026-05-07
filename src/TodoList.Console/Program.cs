@@ -7,9 +7,11 @@ var analyticsPath = Path.Combine(AppContext.BaseDirectory, "analytics.log");
 
 var storage = new JsonFileStorage(dataPath);
 var analytics = new JsonLinesAnalyticsLogger(analyticsPath);
+var importanceAnalyzer = new TaskImportanceAnalyzer();
 analytics.Log("app_started");
 
-var todoService = new TodoService(storage, analytics);
-var menu = new ConsoleMenu(todoService);
+var todoService = new TodoService(storage, analytics, importanceAnalyzer);
+var searchService = new TaskSearchService();
+var menu = new ConsoleMenu(todoService, searchService, analytics);
 
 menu.Run();

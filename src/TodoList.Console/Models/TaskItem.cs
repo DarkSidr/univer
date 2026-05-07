@@ -14,5 +14,7 @@ public sealed class TaskItem
 
     public int CategoryId { get; set; }
 
+    public string Importance { get; set; } = "Обычная";
+
     public DateTime CreatedAt { get; set; } = DateTime.Now;
 }

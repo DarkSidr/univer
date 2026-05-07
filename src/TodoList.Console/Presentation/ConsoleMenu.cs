@@ -6,10 +6,14 @@ namespace TodoListPrototype.Presentation;
 public sealed class ConsoleMenu
 {
     private readonly TodoService _todoService;
+    private readonly TaskSearchService _searchService;
+    private readonly IAnalyticsLogger _analytics;
 
-    public ConsoleMenu(TodoService todoService)
+    public ConsoleMenu(TodoService todoService, TaskSearchService searchService, IAnalyticsLogger analytics)
     {
         _todoService = todoService;
+        _searchService = searchService;
+        _analytics = analytics;
     }
 
     public void Run()
@@ -23,6 +27,8 @@ public sealed class ConsoleMenu
             System.Console.WriteLine("4. Редактировать задачу");
             System.Console.WriteLine("5. Отметить задачу выполненной");
             System.Console.WriteLine("6. Удалить задачу");
+            System.Console.WriteLine("7. Найти задачу");
+            System.Console.WriteLine("8. A/B тест поиска");
             System.Console.WriteLine("0. Выход");
             System.Console.Write("Выберите пункт: ");
 
@@ -48,6 +54,12 @@ public sealed class ConsoleMenu
                     break;
                 case "6":
                     DeleteTask();
+                    break;
+                case "7":
+                    SearchTasks();
+                    break;
+                case "8":
+                    RunSearchBenchmark();
                     break;
                 case "0":
                     return;
@@ -150,6 +162,48 @@ public sealed class ConsoleMenu
         System.Console.WriteLine(deleted ? "Задача удалена." : "Задача не найдена.");
     }
 
+    private void SearchTasks()
+    {
+        var query = ReadRequiredString("Поисковый запрос: ");
+        var mode = ReadSearchMode();
+        var tasks = _todoService.GetTasks();
+        var results = _searchService.Search(tasks, query, mode);
+
+        _analytics.Log("task_search_used", new Dictionary<string, object?>
+        {
+            ["mode"] = mode.ToString(),
+            ["query_length"] = query.Length,
+            ["results_count"] = results.Count
+        });
+
+        System.Console.WriteLine($"Найдено задач: {results.Count}");
+        System.Console.WriteLine();
+
+        foreach (var task in results)
+        {
+            PrintTask(task);
+        }
+    }
+
+    private void RunSearchBenchmark()
+    {
+        var query = ReadRequiredString("Запрос для A/B теста: ");
+        var tasks = _todoService.GetTasks();
+        var result = _searchService.Benchmark(tasks, query);
+
+        _analytics.Log("search_ab_test_completed", new Dictionary<string, object?>
+        {
+            ["contains_ms"] = result.ContainsElapsed.TotalMilliseconds,
+            ["regex_ms"] = result.RegexElapsed.TotalMilliseconds,
+            ["winner"] = result.Winner.ToString()
+        });
+
+        System.Console.WriteLine("Результат A/B теста поиска:");
+        System.Console.WriteLine($"A Contains: {result.ContainsElapsed.TotalMilliseconds:F3} мс");
+        System.Console.WriteLine($"B Regex:    {result.RegexElapsed.TotalMilliseconds:F3} мс");
+        System.Console.WriteLine($"Победитель: {DisplaySearchMode(result.Winner)}");
+    }
+
     private void PrintTask(TaskItem task)
     {
         var status = task.IsCompleted ? "Выполнено" : "Активно";
@@ -158,6 +212,7 @@ public sealed class ConsoleMenu
 
         System.Console.WriteLine($"#{task.Id} [{status}] {task.Title}");
         System.Console.WriteLine($"Категория: {category}; дедлайн: {deadline}");
+        System.Console.WriteLine($"Важность: {task.Importance}");
 
         if (!string.IsNullOrWhiteSpace(task.Description))
         {
@@ -192,6 +247,31 @@ public sealed class ConsoleMenu
         var input = System.Console.ReadLine();
 
         return string.IsNullOrWhiteSpace(input) ? currentCategoryId : ParseInt(input);
+    }
+
+    private static SearchMode ReadSearchMode()
+    {
+        while (true)
+        {
+            System.Console.WriteLine("Режим поиска:");
+            System.Console.WriteLine("1. Version A: Contains");
+            System.Console.WriteLine("2. Version B: Regex");
+            System.Console.Write("Выберите режим: ");
+
+            var input = System.Console.ReadLine();
+
+            if (input == "1")
+            {
+                return SearchMode.Contains;
+            }
+
+            if (input == "2")
+            {
+                return SearchMode.Regex;
+            }
+
+            WriteError("Введите 1 или 2.");
+        }
     }
 
     private static string ReadRequiredString(string prompt)
@@ -331,6 +411,11 @@ public sealed class ConsoleMenu
     private static string DisplayText(string value)
     {
         return string.IsNullOrWhiteSpace(value) ? "пусто" : value;
+    }
+
+    private static string DisplaySearchMode(SearchMode mode)
+    {
+        return mode == SearchMode.Contains ? "Version A: Contains" : "Version B: Regex";
     }
 
     private static void WriteError(string message)

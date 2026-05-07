@@ -7,18 +7,22 @@ public sealed class TodoService
 {
     private readonly IStorage _storage;
     private readonly IAnalyticsLogger _analytics;
+    private readonly TaskImportanceAnalyzer _importanceAnalyzer;
     private readonly TodoData _data;
 
-    public TodoService(IStorage storage, IAnalyticsLogger analytics)
+    public TodoService(IStorage storage, IAnalyticsLogger analytics, TaskImportanceAnalyzer importanceAnalyzer)
     {
         _storage = storage;
         _analytics = analytics;
+        _importanceAnalyzer = importanceAnalyzer;
         _data = storage.Load();
 
         if (_data.Categories.Count == 0)
         {
             _data.Categories.AddRange(Category.DefaultCategories);
         }
+
+        UpdateMissingImportance();
     }
 
     public IReadOnlyList<Category> GetCategories()
@@ -68,6 +72,7 @@ public sealed class TodoService
             Description = description.Trim(),
             Deadline = deadline,
             CategoryId = categoryId,
+            Importance = _importanceAnalyzer.Analyze(title, description, deadline),
             IsCompleted = false,
             CreatedAt = DateTime.Now
         };
@@ -96,6 +101,7 @@ public sealed class TodoService
         task.Description = description.Trim();
         task.Deadline = deadline;
         task.CategoryId = categoryId;
+        task.Importance = _importanceAnalyzer.Analyze(task);
         task.IsCompleted = isCompleted;
         Save();
         _analytics.Log("task_updated", TaskProperties(task));
@@ -147,6 +153,22 @@ public sealed class TodoService
         _storage.Save(_data);
     }
 
+    private void UpdateMissingImportance()
+    {
+        var changed = false;
+
+        foreach (var task in _data.Tasks.Where(task => string.IsNullOrWhiteSpace(task.Importance)))
+        {
+            task.Importance = _importanceAnalyzer.Analyze(task);
+            changed = true;
+        }
+
+        if (changed)
+        {
+            Save();
+        }
+    }
+
     private static Dictionary<string, object?> TaskProperties(TaskItem task)
     {
         return new Dictionary<string, object?>
@@ -155,6 +177,7 @@ public sealed class TodoService
             ["category_id"] = task.CategoryId,
             ["has_description"] = !string.IsNullOrWhiteSpace(task.Description),
             ["has_deadline"] = task.Deadline.HasValue,
+            ["importance"] = task.Importance,
             ["is_completed"] = task.IsCompleted
         };
     }

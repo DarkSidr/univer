@@ -1,2 +1,15 @@
 *.log
 .~lock.*
+*.docx
+
+# .NET
+bin/
+obj/
+.vs/
+.vscode/
+*.user
+*.suo
+
+# App data
+tasks.json
+analytics.log
